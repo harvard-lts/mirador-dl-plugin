@@ -1,8 +1,8 @@
 import Mirador from 'mirador/dist/es/src/index';
-import miradorDownloadPlugins from '../../src';
+import miradorDownloadPlugins from '../src';
 
 const config = {
-  id: 'demo',
+  id: 'mirador',
   miradorDownloadPlugin: {
     restrictDownloadOnSizeDefinition: true,
   },

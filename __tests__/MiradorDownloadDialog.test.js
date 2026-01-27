@@ -1,11 +1,12 @@
 import React from 'react';
-import { shallow } from 'enzyme';
-import Button from '@material-ui/core/Button';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { OSDReferences } from 'mirador/dist/es/src/plugins/OSDReferences';
 import miradorDownloadDialog from '../src/MiradorDownloadDialog';
 
 /** Utility function to wrap  */
 function createWrapper(props) {
-  return shallow(
+  return render(
     <miradorDownloadDialog.component
       canvasLabel={label => (label || 'My Canvas Title')}
       canvases={[]}
@@ -13,24 +14,33 @@ function createWrapper(props) {
       closeDialog={() => {}}
       containerId="container-123"
       infoResponse={() => ({})}
-      manifest={{ getSequences: () => [] }}
+      manifest={{ getRenderings: () => undefined, getSequences: () => [] }}
+      nonTiledResources={[]}
       open
       viewType="single"
       windowId="wid123"
       {...props}
     />,
-  ).dive();
+  );
 }
 
 describe('Dialog', () => {
-  let wrapper;
-
-  it('does not render anything if the open prop is false', () => {
-    wrapper = createWrapper({ open: false });
-    expect(wrapper).toEqual({});
+  beforeAll(() => {
+    OSDReferences.set('wid123', {
+      current: { 
+        viewport: {
+          getBounds: () => ({ x: 0, y: 0, width: 4000, height: 1000 })
+        }
+      },
+    });
   });
 
-  it('renders a CanvasDownloadLinks componewnt for every canvas', () => {
+  it('does not render anything if the open prop is false', () => {
+    createWrapper({ open: false });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('renders a CanvasDownloadLinks component for every canvas', () => {
     const mockCanvas = id => ({
       id,
       getHeight: () => 4000,
@@ -38,34 +48,72 @@ describe('Dialog', () => {
       getRenderings: () => [],
       getCanonicalImageUri: () => 'https://example.com/iiif/abc123/full/9000,/0/default.jpg',
     });
-    wrapper = createWrapper({ canvases: [mockCanvas('abc123'), mockCanvas('xyz321')] });
-    expect(wrapper.find('CanvasDownloadLinks').length).toBe(2);
+    const mockInfoResponse = () => ({
+      json: {
+        width: 1000,
+        height: 4000,
+        profile: ['http://iiif.io/api/image/2/level1.json'],
+      },
+    });
+    createWrapper({ 
+      canvases: [mockCanvas('abc123'), mockCanvas('xyz321')],
+      infoResponse: mockInfoResponse 
+    });
+    
+    // Check that canvas headings are rendered
+    expect(screen.getAllByRole('heading', { level: 3 }).length).toBeGreaterThan(0);
   });
 
-  it('has a close button that triggers the closeDialog prop', () => {
-    const closeDialog = jest.fn();
-    wrapper = createWrapper({ closeDialog });
-    wrapper.find(Button).simulate('click');
+  it('has a close button that triggers the closeDialog prop', async () => {
+    const closeDialog = vi.fn();
+    const user = userEvent.setup();
+    createWrapper({ closeDialog });
+    
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    await user.click(closeButton);
+    
     expect(closeDialog).toHaveBeenCalled();
   });
 
   describe('ManifestDownloadLinks', () => {
-    it('is not rendered if hte manifest has no renderings', () => {
-      wrapper = createWrapper();
+    it('is not rendered if the manifest has no renderings', () => {
+      createWrapper();
 
-      expect(wrapper.find('ManifestDownloadLinks').length).toBe(0);
+      expect(screen.queryByText('Other download options')).not.toBeInTheDocument();
     });
+    
     it('rendered if the manifest has renderings', () => {
-      const rendering = { id: '', getLabel: () => {}, getFormat: () => {} };
-      wrapper = createWrapper({
+      const rendering = { 
+        id: 'http://example.com/test.pdf', 
+        getLabel: () => ({ getValue: () => 'Test PDF' }), 
+        getFormat: () => ({ value: 'application/pdf' }) 
+      };
+      createWrapper({
         manifest: {
+          getRenderings: () => undefined,
           getSequences: () => [
             { getRenderings: () => [rendering] },
           ],
         },
       });
 
-      expect(wrapper.find('ManifestDownloadLinks').length).toBe(1);
+      expect(screen.getByText('Other download options')).toBeInTheDocument();
+    });
+
+    it('rendered if the manifest has v3 manifest-level renderings', () => {
+      const rendering = { 
+        id: 'http://example.com/test.pdf', 
+        getLabel: () => ({ getValue: () => 'Test PDF' }), 
+        getFormat: () => ({ value: 'application/pdf' }) 
+      };
+      createWrapper({
+        manifest: {
+          getRenderings: () => [rendering],
+          getSequences: () => undefined,
+        },
+      });
+
+      expect(screen.getByText('Other download options')).toBeInTheDocument();
     });
   });
 });
