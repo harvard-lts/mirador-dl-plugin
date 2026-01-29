@@ -19,6 +19,12 @@ const config = {
   },
   {
     loadedManifest: 'https://digital.library.villanova.edu/Item/vudl:24299/Manifest',
+  },
+  {
+    loadedManifest: 'https://nrs.harvard.edu/URN-3:FHCL:103496523:MANIFEST:2',
+  },
+    {
+    loadedManifest: 'https://nrs.harvard.edu/URN-3:FHCL:103496523:MANIFEST:3',
   }],
 };
 
