@@ -1,11 +1,9 @@
 import React from 'react';
-import { shallow } from 'enzyme';
-import Typography from '@material-ui/core/Typography';
+import { render, screen } from '@testing-library/react';
 import ManifestDownloadLinks from '../src/ManifestDownloadLinks';
-import RenderingDownloadLink from '../src/RenderingDownloadLink';
 
 function createWrapper(props) {
-  return shallow(
+  return render(
     <ManifestDownloadLinks
       classes={{}}
       renderings={[]}
@@ -29,18 +27,15 @@ describe('ManifestDownloadLinks', () => {
   ];
 
   it('renders the heading', () => {
-    const wrapper = createWrapper({ renderings });
+    createWrapper({ renderings });
 
-    expect(
-      wrapper.find(Typography)
-        .find({ variant: 'h3' })
-        .props().children,
-    ).toEqual('Other download options');
+    expect(screen.getByRole('heading', { name: 'Other download options', level: 3 })).toBeInTheDocument();
   });
 
   it('renders a RenderingDownloadLink for each rendering', () => {
-    const wrapper = createWrapper({ renderings });
+    createWrapper({ renderings });
 
-    expect(wrapper.find(RenderingDownloadLink).length).toBe(2);
+    expect(screen.getByRole('link', { name: 'Link to the PDF' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Link to the OCR' })).toBeInTheDocument();
   });
 });

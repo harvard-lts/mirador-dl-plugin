@@ -1,8 +1,8 @@
 import Mirador from 'mirador/dist/es/src/index';
-import miradorDownloadPlugins from '../../src';
+import miradorDownloadPlugins from '../src';
 
 const config = {
-  id: 'demo',
+  id: 'mirador',
   miradorDownloadPlugin: {
     restrictDownloadOnSizeDefinition: true,
   },
@@ -19,6 +19,12 @@ const config = {
   },
   {
     loadedManifest: 'https://digital.library.villanova.edu/Item/vudl:24299/Manifest',
+  },
+  {
+    loadedManifest: 'https://nrs.harvard.edu/URN-3:FHCL:103496523:MANIFEST:2',
+  },
+    {
+    loadedManifest: 'https://nrs.harvard.edu/URN-3:FHCL:103496523:MANIFEST:3',
   }],
 };
 

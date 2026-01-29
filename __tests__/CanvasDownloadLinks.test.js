@@ -1,18 +1,16 @@
 import React from 'react';
-import { shallow } from 'enzyme';
-import Link from '@material-ui/core/Link';
-import Typography from '@material-ui/core/Typography';
+import { render, screen, cleanup } from '@testing-library/react';
 import { OSDReferences } from 'mirador/dist/es/src/plugins/OSDReferences';
 import CanvasDownloadLinks from '../src/CanvasDownloadLinks';
-import RenderingDownloadLink from '../src/RenderingDownloadLink';
 
 function createWrapper(props) {
-  return shallow(
+  return render(
     <CanvasDownloadLinks
       canvasId="abc123"
       canvasLabel="My Canvas Label"
       classes={{}}
       infoResponse={{}}
+      nonTiledResources={[]}
       restrictDownloadOnSizeDefinition={false}
       viewType="single"
       windowId="wid123"
@@ -22,7 +20,6 @@ function createWrapper(props) {
 }
 
 describe('CanvasDownloadLinks', () => {
-  let wrapper;
   const canvas = {
     id: 'abc123',
     getCanonicalImageUri: width => (
@@ -79,69 +76,69 @@ describe('CanvasDownloadLinks', () => {
   });
 
   it('renders canvas label in an h3 typography', () => {
-    wrapper = createWrapper({ canvas });
-    expect(
-      wrapper.find(Typography)
-        .find({ variant: 'h3' })
-        .props().children,
-    ).toEqual('My Canvas Label');
+    createWrapper({ canvas });
+    expect(screen.getByRole('heading', { name: 'My Canvas Label', level: 3 })).toBeInTheDocument();
   });
 
   it('renders canvas level renderings', () => {
-    wrapper = createWrapper({ canvas });
-    expect(
-      wrapper.find(RenderingDownloadLink).length,
-    ).toEqual(1);
+    createWrapper({ canvas });
+    expect(screen.getByRole('link', { name: 'Link to the PDF' })).toBeInTheDocument();
   });
 
   describe('Zoomed region link', () => {
     const infoResponse = {
-      json: { width: 4000, height: 1000 },
+      json: {
+        '@context': 'http://iiif.io/api/image/2/context.json',
+        '@id': 'http://example.com/iiif/abc123/',
+        width: 4000,
+        height: 1000,
+        profile: [
+          'http://iiif.io/api/image/2/level1.json',
+        ],
+      },
     };
 
     it('it does not render a link when the viewer is zoomed out/at the entire image', () => {
-      wrapper = createWrapper({ canvas, infoResponse, windowId: 'zoomedOutWindow' });
-      expect(wrapper.find(Link).length).toBe(2);
+      createWrapper({ canvas, infoResponse, windowId: 'zoomedOutWindow' });
+      expect(screen.getAllByRole('link').length).toBe(3);
+      cleanup();
 
-      wrapper = createWrapper({ canvas, infoResponse, windowId: 'wid123' });
-      expect(wrapper.find(Link).length).toBe(2);
+      createWrapper({ canvas, infoResponse, windowId: 'wid123' });
+      expect(screen.getAllByRole('link').length).toBe(3);
     });
 
     it('does not render a link when the viewer is zoomed into non-image space (e.g. a reponse the image server cannot handle)', () => {
-      wrapper = createWrapper({ canvas, infoResponse, windowId: 'zoomedIntoNonImageSpaceWindow' });
+      createWrapper({ canvas, infoResponse, windowId: 'zoomedIntoNonImageSpaceWindow' });
 
-      expect(wrapper.find(Link).length).toBe(2);
+      expect(screen.getAllByRole('link').length).toBe(3);
     });
 
     it('is present when the viewer is zoomed into the image', () => {
-      wrapper = createWrapper({ canvas, infoResponse, windowId: 'zoomedInWindow' });
+      createWrapper({ canvas, infoResponse, windowId: 'zoomedInWindow' });
 
-      expect(wrapper.find(Link).length).toBe(3);
-      expect(
-        wrapper
-          .find(Link)
-          .find({ href: 'http://example.com/iiif/abc123/0,0,2000,500/full/0/default.jpg?download=true' })
-          .props().children,
-      ).toEqual('Zoomed region (2000 x 500px)');
+      expect(screen.getAllByRole('link').length).toBe(4);
+      expect(screen.getByRole('link', { name: 'Zoomed region (2000 x 500px)' }))
+        .toHaveAttribute('href', 'http://example.com/iiif/abc123/0,0,2000,500/2000,/0/default.jpg?download=true');
     });
 
     it('is not present when the window is in book or gallery view (only single view)', () => {
-      wrapper = createWrapper({
+      createWrapper({
         canvas, infoResponse, viewType: 'book', windowId: 'zoomedInWindow',
       });
 
-      expect(wrapper.find(Link).length).toBe(2);
+      expect(screen.getAllByRole('link').length).toBe(3);
+      cleanup();
 
-      wrapper = createWrapper({
+      createWrapper({
         canvas, infoResponse, viewType: 'gallery', windowId: 'zoomedInWindow',
       });
 
-      expect(wrapper.find(Link).length).toBe(2);
+      expect(screen.getAllByRole('link').length).toBe(3);
     });
 
     describe('when the zoom link is set to be restricted', () => {
       it('has just the whole image link from the sizes and does not present a zoomed region link', () => {
-        wrapper = createWrapper({
+        createWrapper({
           canvas,
           infoResponse: {
             json: {
@@ -157,64 +154,85 @@ describe('CanvasDownloadLinks', () => {
           windowId: 'zoomedInWindow',
         });
 
-        expect(wrapper.find(Link).length).toBe(1);
-        expect(wrapper.find(Link).props().children).toEqual('Whole image (400 x 100px)');
+        const links = screen.getAllByRole('link');
+        expect(links.length).toBe(2); // PDF rendering + whole image
+        expect(screen.getByRole('link', { name: 'Whole image (400 x 100px)' })).toBeInTheDocument();
       });
     });
   });
 
   describe('when there is are sizes defined in the infoResponse', () => {
-    const sizes = [
-      { width: 4000, height: 1000 },
-      { width: 2000, height: 500 },
-      { width: 1000, height: 250 },
-    ];
+    const infoResponse = {
+      json: {
+        '@context': 'http://iiif.io/api/image/2/context.json',
+        '@id': 'http://example.com/iiif/abc123/',
+        width: 4000,
+        height: 1000,
+        profile: [
+          'http://iiif.io/api/image/2/level1.json',
+        ],
+        sizes: [
+          { width: 4000, height: 1000 },
+          { width: 2000, height: 500 },
+          { width: 1000, height: 250 },
+        ],
+      },
+    };
     it('uses those sizes for links in the download dialog', () => {
-      wrapper = createWrapper({ canvas, infoResponse: { json: { sizes } } });
+      createWrapper({ canvas, infoResponse });
 
-      // console.log(wrapper.debug());
-      expect(wrapper.find(Link).at(0).props().children).toEqual('Whole image (4000 x 1000px)');
-      expect(wrapper.find(Link).at(1).props().children).toEqual('Whole image (2000 x 500px)');
-      expect(wrapper.find(Link).at(2).props().children).toEqual('Whole image (1000 x 250px)');
+      expect(screen.getByRole('link', { name: 'Whole image (4000 x 1000px)' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Whole image (2000 x 500px)' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Whole image (1000 x 250px)' })).toBeInTheDocument();
     });
   });
 
   describe('when there are no defined sizes', () => {
+    const infoResponse = {
+      json: {
+        '@context': 'http://iiif.io/api/image/2/context.json',
+        '@id': 'http://example.com/iiif/abc123/',
+        width: 4000,
+        height: 1000,
+        profile: [
+          'http://iiif.io/api/image/2/level1.json',
+        ],
+      },
+    };
+
     it('renders a link to the whole image', () => {
-      wrapper = createWrapper({ canvas });
-      expect(
-        wrapper
-          .find(Link)
-          .find({ href: 'http://example.com/iiif/abc123/full/full/0/default.jpg?download=true' })
-          .props()
-          .children,
-      ).toEqual('Whole image (4000 x 1000px)');
+      createWrapper({ canvas, infoResponse });
+      
+      expect(screen.getByRole('link', { name: 'Whole image (4000 x 1000px)' }))
+        .toHaveAttribute('href', 'http://example.com/iiif/abc123/full/full/0/default.jpg?download=true');
     });
 
     describe('when the image is > 1000px wide', () => {
       it('renders a link to a small image (1000px wide), and calculates the correct height', () => {
-        wrapper = createWrapper({ canvas });
-        expect(wrapper.find(Link).length).toEqual(2);
-        expect(
-          wrapper
-            .find(Link)
-            .find({ href: 'http://example.com/iiif/abc123/full/1000,/0/default.jpg?download=true' })
-            .length,
-        ).toEqual(1);
-        expect(
-          wrapper
-            .find(Link)
-            .find({ href: 'http://example.com/iiif/abc123/full/1000,/0/default.jpg?download=true' })
-            .props().children,
-        ).toEqual('Whole image (1000 x 250px)');
+        createWrapper({ canvas, infoResponse });
+        
+        expect(screen.getAllByRole('link').length).toEqual(3); // PDF rendering + full image + 1000px image
+        expect(screen.getByRole('link', { name: 'Whole image (1000 x 250px)' }))
+          .toHaveAttribute('href', 'http://example.com/iiif/abc123/full/1000,/0/default.jpg?download=true');
       });
     });
 
     describe('when the image is < 1000px wide', () => {
       it('does not render a link to a small image', () => {
         canvas.getWidth = () => 999;
-        wrapper = createWrapper({ canvas });
-        expect(wrapper.find(Link).length).toEqual(1); // Does not include the 2nd link
+        const smallInfoResponse = {
+          json: {
+            '@context': 'http://iiif.io/api/image/2/context.json',
+            '@id': 'http://example.com/iiif/abc123/',
+            width: 999,
+            height: 250,
+            profile: [
+              'http://iiif.io/api/image/2/level1.json',
+            ],
+          },
+        };
+        createWrapper({ canvas, infoResponse: smallInfoResponse });
+        expect(screen.getAllByRole('link').length).toEqual(2); // PDF rendering + full image only (no 1000px link)
       });
     });
   });

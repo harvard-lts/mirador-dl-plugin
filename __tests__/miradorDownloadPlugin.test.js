@@ -1,11 +1,10 @@
 import React from 'react';
-import { shallow } from 'enzyme';
-import ListItemText from '@material-ui/core/ListItemText';
-import MenuItem from '@material-ui/core/MenuItem';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import miradorDownloadPlugin from '../src/miradorDownloadPlugin';
 
 function createWrapper(props) {
-  return shallow(
+  return render(
     <miradorDownloadPlugin.component
       handleClose={() => {}}
       openDownloadDialog={() => {}}
@@ -20,17 +19,20 @@ describe('miradorDownloadPlugin', () => {
   });
   describe('renders a component', () => {
     it('renders a thing', () => {
-      const wrapper = createWrapper();
-      expect(wrapper.find(ListItemText).props().children).toEqual('Download');
+      createWrapper();
+      expect(screen.getByText('Download')).toBeInTheDocument();
     });
   });
 
   describe('MenuItem', () => {
-    it('calls the openShareDialog and handleClose props when clicked', () => {
-      const handleClose = jest.fn();
-      const openDownloadDialog = jest.fn();
-      const wrapper = createWrapper({ handleClose, openDownloadDialog });
-      wrapper.find(MenuItem).simulate('click');
+    it('calls the openShareDialog and handleClose props when clicked', async () => {
+      const handleClose = vi.fn();
+      const openDownloadDialog = vi.fn();
+      const user = userEvent.setup();
+      createWrapper({ handleClose, openDownloadDialog });
+      
+      await user.click(screen.getByRole('menuitem'));
+      
       expect(handleClose).toHaveBeenCalled();
       expect(openDownloadDialog).toHaveBeenCalled();
     });

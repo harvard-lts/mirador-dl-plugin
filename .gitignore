@@ -1,8 +1,9 @@
-/coverage
-/demo/dist
-/es
-/lib
-/node_modules
-/umd
+dist
+es
+node_modules
 npm-debug.log*
-package-lock.json
+coverage
+
+.idea/
+.DS_Store
+.parcel-cache
