@@ -1,9 +1,8 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import MenuItem from '@material-ui/core/MenuItem';
-import DownloadIcon from '@material-ui/icons/VerticalAlignBottomSharp';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import MenuItem from '@mui/material/MenuItem';
+import DownloadIcon from '@mui/icons-material/VerticalAlignBottomSharp';
 
 const downloadDialogReducer = (state = {}, action) => {
   if (action.type === 'OPEN_WINDOW_DIALOG') {
@@ -30,28 +29,22 @@ const mapDispatchToProps = (dispatch, { windowId }) => ({
   openDownloadDialog: () => dispatch({ type: 'OPEN_WINDOW_DIALOG', windowId, dialogType: 'download' }),
 });
 
-class MiradorDownload extends Component {
-  openDialogAndCloseMenu() {
-    const { handleClose, openDownloadDialog } = this.props;
-
+function MiradorDownload({ handleClose, openDownloadDialog }) {
+  const openDialogAndCloseMenu = () => {
     openDownloadDialog();
     handleClose();
-  }
+  };
 
-  render() {
-    return (
-      <React.Fragment>
-        <MenuItem onClick={() => this.openDialogAndCloseMenu()}>
-          <ListItemIcon>
-            <DownloadIcon />
-          </ListItemIcon>
-          <ListItemText primaryTypographyProps={{ variant: 'body1' }}>
-            Download
-          </ListItemText>
-        </MenuItem>
-      </React.Fragment>
-    );
-  }
+  return (
+    <MenuItem onClick={openDialogAndCloseMenu}>
+      <ListItemIcon>
+        <DownloadIcon />
+      </ListItemIcon>
+      <ListItemText slotProps={{ primary: { variant: 'body1' } }}>
+        Download
+      </ListItemText>
+    </MenuItem>
+  );
 }
 
 MiradorDownload.propTypes = {

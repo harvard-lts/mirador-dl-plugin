@@ -1,11 +1,11 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import miradorDownloadPlugin from '../src/miradorDownloadPlugin';
+import miradorDownloadPlugin from '../src/miradorDownloadPlugin.jsx';
 
 function createWrapper(props) {
+  const Component = miradorDownloadPlugin.component;
   return render(
-    <miradorDownloadPlugin.component
+    <Component
       handleClose={() => {}}
       openDownloadDialog={() => {}}
       {...props}
@@ -30,9 +30,9 @@ describe('miradorDownloadPlugin', () => {
       const openDownloadDialog = vi.fn();
       const user = userEvent.setup();
       createWrapper({ handleClose, openDownloadDialog });
-      
+
       await user.click(screen.getByRole('menuitem'));
-      
+
       expect(handleClose).toHaveBeenCalled();
       expect(openDownloadDialog).toHaveBeenCalled();
     });

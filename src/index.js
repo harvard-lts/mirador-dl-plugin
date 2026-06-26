@@ -1,5 +1,5 @@
-import miradorDownloadPlugin from './miradorDownloadPlugin';
-import MiradorDownloadDialogPlugin from './MiradorDownloadDialog';
+import miradorDownloadPlugin from './miradorDownloadPlugin.jsx';
+import MiradorDownloadDialogPlugin from './MiradorDownloadDialog.jsx';
 
 export {
   miradorDownloadPlugin,

@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -12,14 +11,9 @@ export default defineConfig({
   resolve: {
     extensions: ['.js', '.jsx'],
   },
-  esbuild: {
-    loader: 'jsx',
-    include: /(src|__tests__)\/.*\.js$/,
-    exclude: [],
-  },
   optimizeDeps: {
-    esbuildOptions: {
-      loader: {
+    rolldownOptions: {
+      moduleTypes: {
         '.js': 'jsx',
       },
     },
@@ -33,9 +27,8 @@ export default defineConfig({
     root: '.',
     include: [
       '**/__tests__/**/*.{js,jsx}',
-      '**/*.{test,spec}.{js,jsx}'
+      '**/*.{test,spec}.{js,jsx}',
     ],
     setupFiles: './setupTests.js',
   },
 });
-  
