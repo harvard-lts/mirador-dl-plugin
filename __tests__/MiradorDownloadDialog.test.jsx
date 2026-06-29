@@ -1,16 +1,16 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { OSDReferences } from 'mirador/dist/es/src/plugins/OSDReferences';
-import miradorDownloadDialog from '../src/MiradorDownloadDialog';
+import { OSDReferences } from 'mirador';
+import miradorDownloadDialog from '../src/MiradorDownloadDialog.jsx';
+
+const MiradorDownloadDialog = miradorDownloadDialog.component;
 
 /** Utility function to wrap  */
 function createWrapper(props) {
   return render(
-    <miradorDownloadDialog.component
+    <MiradorDownloadDialog
       canvasLabel={label => (label || 'My Canvas Title')}
       canvases={[]}
-      classes={{}}
       closeDialog={() => {}}
       containerId="container-123"
       infoResponse={() => ({})}
@@ -157,17 +157,32 @@ describe('mapStateToProps', () => {
     manifests: {
       'http://example.com/abc123/iiif/manifest': {
         json: {
+          '@context': 'http://iiif.io/api/presentation/2/context.json',
+          '@id': 'http://example.com/abc123/iiif/manifest',
           '@type': 'sc:Manifest',
           sequences: [
             {
+              '@id': 'http://example.com/abc123/iiif/sequence/normal',
+              '@type': 'sc:Sequence',
               canvases: [
                 {
                   '@id': 'http://example.com/abc123/canvas/0',
+                  '@type': 'sc:Canvas',
+                  width: 2579,
+                  height: 3638,
                   images: [
                     {
+                      '@type': 'oa:Annotation',
+                      motivation: 'sc:painting',
+                      on: 'http://example.com/abc123/canvas/0',
                       resource: {
+                        '@id': 'https://example.com/image/iiif/abc123_0001/full/full/0/default.jpg',
+                        '@type': 'dctypes:Image',
+                        format: 'image/jpeg',
                         service: {
+                          '@context': 'http://iiif.io/api/image/2/context.json',
                           '@id': 'https://example.com/image/iiif/abc123_0001',
+                          profile: 'http://iiif.io/api/image/2/level2.json',
                         },
                       },
                     },

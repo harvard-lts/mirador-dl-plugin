@@ -1,6 +1,5 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
-import RenderingDownloadLink from '../src/RenderingDownloadLink';
+import RenderingDownloadLink from '../src/RenderingDownloadLink.jsx';
 
 function createWrapper(props) {
   return render(

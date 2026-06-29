@@ -1,14 +1,12 @@
-import React from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
-import { OSDReferences } from 'mirador/dist/es/src/plugins/OSDReferences';
-import CanvasDownloadLinks from '../src/CanvasDownloadLinks';
+import { OSDReferences } from 'mirador';
+import CanvasDownloadLinks from '../src/CanvasDownloadLinks.jsx';
 
 function createWrapper(props) {
   return render(
     <CanvasDownloadLinks
       canvasId="abc123"
       canvasLabel="My Canvas Label"
-      classes={{}}
       infoResponse={{}}
       nonTiledResources={[]}
       restrictDownloadOnSizeDefinition={false}

@@ -1,11 +1,9 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
-import ManifestDownloadLinks from '../src/ManifestDownloadLinks';
+import ManifestDownloadLinks from '../src/ManifestDownloadLinks.jsx';
 
 function createWrapper(props) {
   return render(
     <ManifestDownloadLinks
-      classes={{}}
       renderings={[]}
       {...props}
     />,
